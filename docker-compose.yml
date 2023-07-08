@@ -9,8 +9,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "3000:3000"
 
   db:
     image: postgres:15.3-alpine3.18
@@ -18,25 +16,66 @@ services:
     volumes:
       - ./.db_data:/var/lib/postgresql/data:rw
     healthcheck:
-      test: /usr/local/bin/pg_isready -U api -d paastech
+      test: /usr/local/bin/pg_isready -U paastech -d paastech
       interval: 5s
       timeout: 10s
       retries: 4
     environment:
       POSTGRES_DB: paastech
-      POSTGRES_USER: api
-      POSTGRES_PASSWORD: api
-    networks:
-      - internal
+      POSTGRES_USER: paastech
+      POSTGRES_PASSWORD: paastech
 
-  # git-controller: 
-  #   image: ghcr.io/paastech-cloud/git-repo-manager:0.1.0
-  #   container_name: paastech-git-controller
-  #   # TODO
+  git-repo-manager: 
+    image: ghcr.io/paastech-cloud/git-repo-manager:latest
+    pull_policy: always
+    container_name: paastech-git-repo-manager
+    environment:
+      - GIT_REPOSITORY_BASE_PATH=/srv
+      - GIT_HOOKS_BASE_PATH=/home/git
+      - SERVER_PORT=50051
+      - RUST_LOG=info
+    volumes:
+      - ./data/git/repositories:/srv
+      - ./data/git/hooks:/home/git
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
 
-  pommegrenade:
+  git-ssh-server:
+    image: ghcr.io/paastech-cloud/git-ssh-server:latest
+    pull_policy: always
+    container_name: paastech-git-ssh-server
+    depends_on:
+      - db
+    environment:
+      - GIT_REPOSITORIES_FULL_BASE_PATH=/srv
+      - GIT_POSTGRESQL_USERNAME=paastech
+      - GIT_POSTGRESQL_PASSWORD=paastech
+      - GIT_POSTGRESQL_DATABASE_NAME=paastech
+      - GIT_POSTGRESQL_PORT=5432
+      - GIT_POSTGRESQL_HOST=postgresql
+      - GIT_HOST_SIGNER_PATH=/etc/ssh/keys/id_ed25519
+    volumes:
+      - ./data/git/repositories:/srv
+      - ./data/git/ssh/keys:/etc/ssh/keys
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+  scheduler:
     image: ghcr.io/paastech-cloud/pomegranate:0.1.0
-    container_name: paastech-pommegrenade
+    container_name: paastech-scheduler
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     depends_on:
