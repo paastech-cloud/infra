@@ -73,7 +73,7 @@ services:
           cpus: "0.25"
           memory: 128M
 
-  scheduler:
+  deployment-manager:
     image: ghcr.io/paastech-cloud/pomegranate:0.2.0
     container_name: paastech-scheduler
     volumes:
