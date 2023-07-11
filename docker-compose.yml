@@ -75,7 +75,7 @@ services:
 
   deployment-manager:
     image: ghcr.io/paastech-cloud/pomegranate:0.2.0
-    container_name: paastech-scheduler
+    container_name: paastech-deployment-manager
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     depends_on:
