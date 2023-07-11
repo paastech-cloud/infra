@@ -25,7 +25,7 @@ services:
       POSTGRES_USER: paastech
       POSTGRES_PASSWORD: paastech
 
-  git-repo-manager: 
+  git-repo-manager:
     image: ghcr.io/paastech-cloud/git-repo-manager:latest
     pull_policy: always
     container_name: paastech-git-repo-manager
@@ -74,7 +74,7 @@ services:
           memory: 128M
 
   scheduler:
-    image: ghcr.io/paastech-cloud/pomegranate:0.1.0
+    image: ghcr.io/paastech-cloud/pomegranate:0.2.0
     container_name: paastech-scheduler
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
