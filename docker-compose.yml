@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   api:
     image: ghcr.io/paastech-cloud/api:0.2.1
@@ -13,6 +11,8 @@ services:
         condition: service_started
     networks:
       - internal
+    labels:
+      - "traefik.http.routers.api.rule=Host(`api.paastech.cloud`)"
 
   db:
     image: postgres:15.3-alpine3.18
@@ -43,17 +43,10 @@ services:
     volumes:
       - ./data/git/repositories:/srv
       - ./data/git/hooks:/home/git
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 128M
-        reservations:
-          cpus: "0.25"
-          memory: 128M
+    networks:
+      - internal
     labels:
-      - "trafik.enable=false"
-#      - "traefik.http.routers.my-container.rule=Host(`git.paastech.cloud`)"
+      - "traefik.enable=false"
 
   git-ssh-server:
     image: ghcr.io/paastech-cloud/git-ssh-server:latest
@@ -71,7 +64,7 @@ services:
       - GIT_HOST_SIGNER_PATH=/etc/ssh/keys/id_ed25519
     volumes:
       - ./data/git/repositories:/srv
-      - ./data/git/ssh/keys:/etc/ssh/keys
+      - $HOME/scripts/output/server:/etc/ssh/keys
       - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       resources:
@@ -82,7 +75,7 @@ services:
           cpus: "0.25"
           memory: 128M
     labels:
-      - "trafik.enable=false"
+      - "traefik.http.routers.git-repo-manager.rule=Host(`git.paastech.cloud`)"
 
 
   deployment-manager:
@@ -133,6 +126,7 @@ services:
     env_file:
       - .env
     networks:
+      - internal
       - pomegranate-proxy-network
 
 networks:
