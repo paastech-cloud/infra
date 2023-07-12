@@ -36,20 +36,20 @@ services:
     pull_policy: always
     container_name: paastech-git-repo-manager
     environment:
-      - GIT_REPOSITORY_BASE_PATH=/srv
-      - GIT_HOOKS_BASE_PATH=/home/git
+      - GIT_REPOSITORY_BASE_PATH=/srv/repositories
+      - GIT_HOOKS_BASE_PATH=/srv/hooks
       - SERVER_PORT=50051
-      - RUST_LOG=info
+      - RUST_LOG=trace
     volumes:
-      - ./data/git/repositories:/srv
-      - ./data/git/hooks:/home/git
+      - /srv/repositories:/srv/respositories
+      - /srv/hooks:/srv/hooks
     networks:
       - internal
     labels:
       - "traefik.enable=false"
 
   git-ssh-server:
-    image: ghcr.io/paastech-cloud/git-ssh-server:latest
+    image: ghcr.io/paastech-cloud/git-ssh-server:1.0.0
     pull_policy: always
     container_name: paastech-git-ssh-server
     depends_on:
@@ -60,12 +60,15 @@ services:
       - GIT_POSTGRESQL_PASSWORD=paastech
       - GIT_POSTGRESQL_DATABASE_NAME=paastech
       - GIT_POSTGRESQL_PORT=5432
-      - GIT_POSTGRESQL_HOST=postgresql
+      - GIT_POSTGRESQL_HOST=db
       - GIT_HOST_SIGNER_PATH=/etc/ssh/keys/id_ed25519
+      - GIT_LOG_LEVEL=debug
     volumes:
-      - ./data/git/repositories:/srv
+      - /srv/repositories:/srv
       - $HOME/scripts/output/server:/etc/ssh/keys
       - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "2222:2222"
     deploy:
       resources:
         limits:
@@ -74,23 +77,23 @@ services:
         reservations:
           cpus: "0.25"
           memory: 128M
+    networks:
+      - internal
     labels:
-      - "traefik.http.routers.git-repo-manager.rule=Host(`git.paastech.cloud`)"
+      - "traefik.tcp.routers.git-repo-manager.rule=Host(`git.paastech.cloud`)"
 
 
   deployment-manager:
-      image: ghcr.io/paastech-cloud/pomegranate:0.2.0
-      container_name: paastech-deployment-manager
-      volumes:
-        - "/var/run/docker.sock:/var/run/docker.sock"
-      depends_on:
-        - reverse-proxy
-      env_file:
-        - .env
-      ports:
-        - "50051:50051"
-      networks:
-        - internal
+    image: ghcr.io/paastech-cloud/pomegranate:0.2.0
+    container_name: paastech-deployment-manager
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    depends_on:
+      - reverse-proxy
+    env_file:
+      - .env
+    networks:
+      - internal
 
   reverse-proxy:
     # The official v2 Traefik docker image
