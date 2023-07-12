@@ -41,7 +41,7 @@ services:
       - SERVER_PORT=50051
       - RUST_LOG=trace
     volumes:
-      - /srv/repositories:/srv/respositories
+      - /srv/repositories:/srv/repositories
       - /srv/hooks:/srv/hooks
     networks:
       - internal
