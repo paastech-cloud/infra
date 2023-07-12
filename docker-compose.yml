@@ -32,7 +32,7 @@ services:
       - internal
 
   git-repo-manager:
-    image: ghcr.io/paastech-cloud/git-repo-manager:latest
+    image: ghcr.io/paastech-cloud/git-repo-manager:1.0.1
     pull_policy: always
     container_name: paastech-git-repo-manager
     environment:
@@ -78,8 +78,6 @@ services:
           memory: 128M
     networks:
       - internal
-    labels:
-      - "traefik.tcp.routers.git-repo-manager.rule=Host(`git.paastech.cloud`)"
 
 
   deployment-manager:
@@ -119,8 +117,8 @@ services:
       # Secured endpoint
       - --entryPoints.websecure.address=:443
       - --entryPoints.websecure.http.tls.certResolver=letsencrypt
-      - --entryPoints.websecure.http.tls.domains[0].main=${POMEGRANATE_FQDN}
-      - --entryPoints.websecure.http.tls.domains[0].sans[0]=*.${POMEGRANATE_FQDN}
+      - --entryPoints.websecure.http.tls.domains[0].main=*.${POMEGRANATE_FQDN}
+      - --entryPoints.websecure.http.tls.domains[0].sans=*.${POMEGRANATE_FQDN},*.user-app.${POMEGRANATE_FQDN}
 
       - --certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
       - --certificatesResolvers.letsencrypt.acme.email=${POMEGRANATE_LETSENCRYPT_EMAIL}
